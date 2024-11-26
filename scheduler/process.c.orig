@@ -99,13 +99,9 @@ cupsdCreateProfile(int job_id,		/* I - Job ID or 0 for none */
 
   if ((fp = cupsTempFile2(profile, sizeof(profile))) == NULL)
   {
-   /*
-    * This should never happen, and is fatal when sandboxing is enabled.
-    */
-
     cupsdLogMessage(CUPSD_LOG_DEBUG2, "cupsdCreateProfile(job_id=%d, allow_networking=%d) = NULL", job_id, allow_networking);
-    cupsdLogMessage(CUPSD_LOG_EMERG, "Unable to create security profile: %s", strerror(errno));
-    kill(getpid(), SIGTERM);
+    cupsdLogMessage(CUPSD_LOG_ERROR, "Unable to create security profile: %s",
+                    strerror(errno));
     return (NULL);
   }
 
@@ -202,8 +198,10 @@ cupsdCreateProfile(int job_id,		/* I - Job ID or 0 for none */
 		 " #\"^%s/\""		/* TempDir/... */
 		 " #\"^%s$\""		/* CacheDir */
 		 " #\"^%s/\""		/* CacheDir/... */
+		 " #\"^%s$\""		/* StateDir */
+		 " #\"^%s/\""		/* StateDir/... */
 		 "))\n",
-		 temp, temp, cache, cache);
+		 temp, temp, cache, cache, state, state);
   /* Read common folders */
   cupsFilePrintf(fp,
                  "(allow file-read-data file-read-metadata\n"
@@ -245,10 +243,8 @@ cupsdCreateProfile(int job_id,		/* I - Job ID or 0 for none */
 		 " #\"^%s/\""		/* ServerBin/... */
 		 " #\"^%s$\""		/* ServerRoot */
 		 " #\"^%s/\""		/* ServerRoot/... */
-		 " #\"^%s$\""		/* StateDir */
-		 " #\"^%s/\""		/* StateDir/... */
 		 "))\n",
-		 request, request, bin, bin, root, root, state, state);
+		 request, request, bin, bin, root, root);
   if (Sandboxing == CUPSD_SANDBOXING_RELAXED)
   {
     /* Limited write access to /Library/Printers/... */
